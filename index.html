@@ -6,6 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-title" content="Aprende ES"/>
 <title>Aprende Español — Free Playlist</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#0a0a0f">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #0a0a0f; color: #e8e8f0; font-family: Georgia, 'Times New Roman', serif; min-height: 100vh; }
@@ -385,6 +388,11 @@ var isStandalone = window.navigator.standalone === true;
 if (isIOS && !isStandalone) document.getElementById('iosBanner').style.display = 'block';
 
 renderAll();
+</script>
+  <script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
 </script>
 </body>
 </html>
