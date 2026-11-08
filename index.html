@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="Aprende ES"/>
+<title>Aprende Español — Free Playlist</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0a0f; color: #e8e8f0; font-family: Georgia, 'Times New Roman', serif; min-height: 100vh; }
+
+.header {
+  background: linear-gradient(135deg, #0a0a0f 0%, #12122a 60%, #1a0a2e 100%);
+  border-bottom: 1px solid rgba(233,69,96,0.3);
+  padding: 28px 20px 22px;
+}
+.header-label { font-family: monospace; font-size: 10px; letter-spacing: 3px; color: #e94560; text-transform: uppercase; margin-bottom: 6px; }
+.header h1 { font-size: 32px; font-weight: normal; letter-spacing: -0.5px; margin-bottom: 4px; }
+.header h1 em { font-style: italic; }
+.header h1 .red { color: #e94560; }
+.header p { color: #8888aa; font-size: 13px; font-style: italic; }
+
+.filters { display: flex; gap: 8px; padding: 14px 16px; overflow-x: auto; background: #0d0d18; border-bottom: 1px solid rgba(255,255,255,0.06); scrollbar-width: none; }
+.filters::-webkit-scrollbar { display: none; }
+.pill { flex-shrink: 0; padding: 7px 16px; border-radius: 40px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: #8888aa; font-size: 12px; font-family: monospace; cursor: pointer; white-space: nowrap; }
+.pill.active { background: #e94560; border-color: #e94560; color: #fff; }
+.pill.saved-pill { border-color: rgba(250,204,21,0.4); color: #facc15; }
+.pill.saved-pill.active { background: #a37f00; border-color: #facc15; color: #fff; }
+
+.count { font-size: 11px; color: #606080; font-family: monospace; padding: 14px 18px 4px; }
+.grid { padding: 12px 16px 40px; display: flex; flex-direction: column; gap: 14px; max-width: 680px; margin: 0 auto; }
+
+/* SHOW CARD */
+.card { border-radius: 16px; padding: 20px; border: 1px solid rgba(255,255,255,0.07); position: relative; overflow: hidden; }
+.card-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.card-row1 { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.card-emoji { font-size: 34px; line-height: 1; }
+.card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.save-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: rgba(255,255,255,0.2); line-height: 1; padding: 0; }
+.save-btn.saved { color: #facc15; }
+.type-badge { font-size: 10px; padding: 3px 8px; border-radius: 20px; font-family: monospace; }
+.card-title { font-size: 19px; font-weight: normal; color: #f0f0ff; margin-bottom: 6px; }
+.card-meta-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.card-meta-row span { font-size: 11px; font-family: monospace; }
+.card-desc { font-size: 13px; line-height: 1.65; color: #8888aa; margin-bottom: 14px; }
+.tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+.tag { font-size: 10px; padding: 3px 8px; border-radius: 4px; background: rgba(255,255,255,0.05); color: #606080; border: 1px solid rgba(255,255,255,0.07); font-family: monospace; }
+.watch-btn { display: block; text-align: center; padding: 11px; border-radius: 10px; text-decoration: none; font-size: 12px; font-family: monospace; letter-spacing: 1px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 10px; }
+
+/* DESTINOS EPISODE SECTION */
+.ep-toggle { width: 100%; background: rgba(245,159,11,0.1); border: 1px solid rgba(245,159,11,0.3); color: #f59e0b; font-family: monospace; font-size: 12px; padding: 10px; border-radius: 8px; cursor: pointer; letter-spacing: 0.5px; }
+.ep-panel { display: none; margin-top: 10px; border: 1px solid rgba(245,159,11,0.2); border-radius: 10px; overflow: hidden; }
+.ep-panel.open { display: block; }
+.ep-filters { display: flex; gap: 6px; padding: 10px; background: rgba(0,0,0,0.3); overflow-x: auto; scrollbar-width: none; }
+.ep-filters::-webkit-scrollbar { display: none; }
+.ep-pill { flex-shrink: 0; padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(245,159,11,0.25); background: transparent; color: #806020; font-size: 11px; font-family: monospace; cursor: pointer; white-space: nowrap; }
+.ep-pill.active { background: #f59e0b; border-color: #f59e0b; color: #000; }
+.ep-list { max-height: 340px; overflow-y: auto; }
+.ep-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); text-decoration: none; }
+.ep-item:hover { background: rgba(245,159,11,0.07); }
+.ep-num { font-family: monospace; font-size: 11px; color: #f59e0b; min-width: 28px; }
+.ep-info { flex: 1; }
+.ep-title { font-size: 13px; color: #d0d0e0; }
+.ep-unit { font-size: 10px; color: #606080; font-family: monospace; margin-top: 2px; }
+.ep-play { font-size: 14px; color: #f59e0b; opacity: 0.6; }
+.ep-note { padding: 10px 14px; font-size: 11px; color: #606080; font-style: italic; text-align: center; border-top: 1px solid rgba(255,255,255,0.04); }
+
+.ios-banner { margin: 14px 16px; padding: 14px 16px; border-radius: 12px; background: rgba(233,69,96,0.08); border: 1px solid rgba(233,69,96,0.25); font-size: 13px; color: #8888aa; line-height: 1.6; display: none; }
+.ios-banner strong { color: #e8e8f0; }
+.tip { margin: 4px auto 40px; padding: 16px; border-radius: 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); font-size: 12px; color: #606080; line-height: 1.7; text-align: center; max-width: 680px; width: calc(100% - 32px); }
+.tip strong { color: #8888aa; }
+.tip .blue { color: #60a5fa; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-label">&#127466;&#127480; Free Learning Playlist</div>
+  <h1><em>Aprende Espa&ntilde;ol</em> <span class="red">&#10022;</span></h1>
+  <p>10 free beginner shows &amp; channels &mdash; no subscription needed</p>
+</div>
+
+<div class="filters" id="filters"></div>
+
+<div class="ios-banner" id="iosBanner">
+  <strong>&#128241; Add to Home Screen:</strong> Tap the Share button &#11014;&#65039; in Safari, then <em>"Add to Home Screen"</em> to use as an app.
+</div>
+
+<p class="count" id="count"></p>
+<div class="grid" id="grid"></div>
+
+<div class="tip">
+  &#128161; <strong>Pro tip:</strong> Install the <span class="blue">Language Reactor</span> Chrome extension &mdash;
+  it adds instant pop-up translations to any YouTube video. Start with <em>Dreaming Spanish</em>, then <em>Destinos</em>.
+</div>
+
+<script>
+// ── DESTINOS EPISODES ──────────────────────────────────────────────────────
+var destinosEps = [
+  {n:1,  title:"La carta",                unit:"Intro – La Gavia"},
+  {n:2,  title:"El secreto",              unit:"Intro – La Gavia"},
+  {n:3,  title:"El comienzo",             unit:"II – Sevilla, España"},
+  {n:4,  title:"Perdido",                 unit:"II – Sevilla, España"},
+  {n:5,  title:"La despedida",            unit:"II – Sevilla, España"},
+  {n:6,  title:"¿Maestra?",              unit:"II – Sevilla, España"},
+  {n:7,  title:"La cartera",              unit:"III – Madrid, España"},
+  {n:8,  title:"El encuentro",            unit:"III – Madrid, España"},
+  {n:9,  title:"Estaciones",             unit:"III – Madrid, España"},
+  {n:10, title:"Cuadros",                unit:"III – Madrid, España"},
+  {n:11, title:"La demora",              unit:"III – Madrid, España"},
+  {n:12, title:"Revelaciones",           unit:"IV – Argentina"},
+  {n:13, title:"La búsqueda",           unit:"IV – Argentina"},
+  {n:14, title:"En el extranjero",       unit:"IV – Argentina"},
+  {n:15, title:"Culpable",              unit:"IV – Argentina"},
+  {n:16, title:"Caras",                 unit:"IV – Argentina"},
+  {n:17, title:"Inolvidable",           unit:"IV – Argentina"},
+  {n:18, title:"Estimada señora Suárez",unit:"IV – Argentina"},
+  {n:19, title:"Por fin",               unit:"V – Puerto Rico"},
+  {n:20, title:"Relaciones estrechas",  unit:"V – Puerto Rico"},
+  {n:21, title:"El peaje",              unit:"V – Puerto Rico"},
+  {n:22, title:"Recuerdos",            unit:"V – Puerto Rico"},
+  {n:23, title:"Vista al mar",          unit:"V – Puerto Rico"},
+  {n:24, title:"El don Juan",           unit:"V – Puerto Rico"},
+  {n:25, title:"Reflexiones I",         unit:"V – Puerto Rico"},
+  {n:26, title:"Reflexiones II",        unit:"V – Puerto Rico"},
+  {n:27, title:"El rescate",            unit:"VI – México: El pueblo"},
+  {n:28, title:"Atrapados",            unit:"VI – México: El pueblo"},
+  {n:29, title:"¡Se derrumbó!",        unit:"VI – México: El pueblo"},
+  {n:30, title:"Preocupaciones",       unit:"VI – México: El pueblo"},
+  {n:31, title:"Medidas drásticas",    unit:"VI – México: El pueblo"},
+  {n:32, title:"Ha habido un accidente",unit:"VI – México: El pueblo"},
+  {n:33, title:"Si supieras",          unit:"VI – México: El pueblo"},
+  {n:34, title:"¡Éxito!",             unit:"VI – México: El pueblo"},
+  {n:35, title:"Reunidos",            unit:"VI – México: El pueblo"},
+  {n:36, title:"¿Qué estarán haciendo?",unit:"VI – México: El pueblo"},
+  {n:37, title:"Llevando cuentas",     unit:"VII – México: La Capital"},
+  {n:38, title:"Ocultando la verdad",  unit:"VII – México: La Capital"},
+  {n:39, title:"La misma sonrisa",     unit:"VII – México: La Capital"},
+  {n:40, title:"Entre la espada y la pared",unit:"VII – México: La Capital"},
+  {n:41, title:"Algo inesperado",      unit:"VII – México: La Capital"},
+  {n:42, title:"Yo invito",           unit:"VII – México: La Capital"},
+  {n:43, title:"Seremos cuatro",      unit:"VII – México: La Capital"},
+  {n:44, title:"Una promesa y una sonrisa",unit:"VII – México: La Capital"},
+  {n:45, title:"¡Estoy harta!",       unit:"VII – México: La Capital"},
+  {n:46, title:"Las empanadas",       unit:"VII – México: La Capital"},
+  {n:47, title:"Tengo dudas",         unit:"VII – México: La Capital"},
+  {n:48, title:"Así fue: I",         unit:"VII – México: La Capital"},
+  {n:49, title:"Así fue II",         unit:"VII – México: La Capital"},
+  {n:50, title:"Así fue III",        unit:"VII – México: La Capital"},
+  {n:51, title:"Así fue IV",         unit:"VII – México: La Capital"},
+  {n:52, title:"Siempre lo amó",     unit:"VII – México: La Capital"}
+];
+
+// Learner.org watch URLs (primary) + Internet Archive (backup)
+function epLearnerURL(n) {
+  var pad = n < 10 ? '0' + n : '' + n;
+  return 'https://www.learner.org/series/destinos-an-introduction-to-spanish/unit-' + romanUnit(n) + '/';
+}
+function epArchiveURL(n) {
+  var pad = n < 10 ? '0' + n : '' + n;
+  return 'https://archive.org/details/destinos_pbs/DESTINOS_' + pad + '.mp4';
+}
+function romanUnit(n) {
+  if (n <= 2)  return 'i';
+  if (n <= 6)  return 'ii';
+  if (n <= 11) return 'iii';
+  if (n <= 18) return 'iv';
+  if (n <= 26) return 'v';
+  if (n <= 36) return 'vi';
+  return 'vii';
+}
+
+var unitGroups = {
+  'La Gavia (1-2)': [1,2],
+  'España (3-11)': [3,4,5,6,7,8,9,10,11],
+  'Argentina (12-18)': [12,13,14,15,16,17,18],
+  'Puerto Rico (19-26)': [19,20,21,22,23,24,25,26],
+  'México I (27-36)': [27,28,29,30,31,32,33,34,35,36],
+  'México II (37-52)': [37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52]
+};
+
+// ── SHOWS ─────────────────────────────────────────────────────────────────
+var shows = [
+  { id:1, title:"Dreaming Spanish", type:"YouTube Channel", level:"Beginner", region:"Various",
+    desc:"Comprehensible input videos — Pablo speaks slowly with visuals so you understand without translating. The #1 beginner resource.",
+    tags:["Comprehensible Input","Slow Speech","No English"],
+    url:"https://www.youtube.com/@DreamingSpanish",
+    emoji:"&#127769;", accent:"#e94560", bg:"#1a1a2e", eps:"1000+ videos", destinos:false },
+  { id:2, title:"Destinos (52 episodes)", type:"TV Series", level:"Beginner", region:"Spain / Mexico / Argentina",
+    desc:"A telenovela made to teach Spanish. Lawyer Raquel travels across the Spanish-speaking world. Slow, clear speech. All 52 episodes free — tap below to browse & watch each one.",
+    tags:["Made for Learners","Telenovela","Spanish Subtitles","52 Episodes"],
+    url:"https://www.learner.org/series/destinos-an-introduction-to-spanish/",
+    emoji:"&#9992;&#65039;", accent:"#f59e0b", bg:"#0f3460", eps:"52 episodes", destinos:true },
+  { id:3, title:"Extra en Espanol", type:"TV Series", level:"Beginner", region:"Spain",
+    desc:"A sitcom made specifically for Spanish learners. Slow, clear dialogue and lots of humor — like Friends but for beginners. Free on YouTube.",
+    tags:["Sitcom","Made for Learners","Subtitles"],
+    url:"https://www.youtube.com/results?search_query=extra+en+espanol+series",
+    emoji:"&#128250;", accent:"#e94560", bg:"#16213e", eps:"13 episodes", destinos:false },
+  { id:4, title:"Butterfly Spanish", type:"YouTube Channel", level:"Beginner", region:"Mexico",
+    desc:"Ana breaks down grammar and vocabulary in clear, friendly lessons. Great for absolute beginners who want structure.",
+    tags:["Grammar","Vocabulary","Structured"],
+    url:"https://www.youtube.com/@ButterflySpanish",
+    emoji:"&#129411;", accent:"#c0392b", bg:"#0f3460", eps:"300+ videos", destinos:false },
+  { id:5, title:"El Chavo del 8", type:"TV Series", level:"Beginner", region:"Mexico",
+    desc:"Classic Mexican sitcom loved across Latin America. Simple repetitive dialogue and physical comedy — perfect for beginners.",
+    tags:["Classic","Simple Dialogue","Funny"],
+    url:"https://www.youtube.com/results?search_query=el+chavo+del+8+completo",
+    emoji:"&#127917;", accent:"#4ade80", bg:"#1a1a2e", eps:"Hundreds of eps", destinos:false },
+  { id:6, title:"Easy Spanish", type:"YouTube Channel", level:"Beginner-Intermediate", region:"Various",
+    desc:"Street interviews with real native speakers and dual Spanish/English subtitles — hear authentic Spanish from Mexico, Spain, and Argentina.",
+    tags:["Native Speakers","Dual Subtitles","Real Life"],
+    url:"https://www.youtube.com/@EasySpanish",
+    emoji:"&#127908;", accent:"#60a5fa", bg:"#16213e", eps:"400+ videos", destinos:false },
+  { id:7, title:"SpanishPod101", type:"YouTube Channel", level:"Beginner", region:"Various",
+    desc:"Structured lessons covering grammar, vocabulary and conversation. Bite-sized videos — great for busy schedules.",
+    tags:["Structured","Grammar","Conversation"],
+    url:"https://www.youtube.com/@SpanishPod101",
+    emoji:"&#128218;", accent:"#a78bfa", bg:"#1a1a2e", eps:"2000+ videos", destinos:false },
+  { id:8, title:"Pequenas Coincidencias", type:"TV Series", level:"Beginner-Intermediate", region:"Spain",
+    desc:"Lighthearted Spanish rom-com with an easy-to-follow storyline and natural conversational pace — great for relaxed learning.",
+    tags:["Rom-Com","Light Dialogue","Modern Spanish"],
+    url:"https://www.youtube.com/results?search_query=pequenas+coincidencias",
+    emoji:"&#128149;", accent:"#f472b6", bg:"#16213e", eps:"2 seasons", destinos:false },
+  { id:9, title:"Senor Jordan", type:"YouTube Channel", level:"Beginner", region:"Various",
+    desc:"Friendly and clear grammar video lessons. Perfect if you need to understand the rules before jumping into real shows.",
+    tags:["Grammar","Beginner Friendly","Lessons"],
+    url:"https://www.youtube.com/@senorjordan",
+    emoji:"&#9997;&#65039;", accent:"#34d399", bg:"#0f3460", eps:"200+ videos", destinos:false },
+  { id:10, title:"La Rosa de Guadalupe", type:"TV Series", level:"Beginner", region:"Mexico",
+    desc:"Short-episode Mexican telenovela with simple emotional storylines. Very accessible Mexican Spanish for beginner immersion.",
+    tags:["Telenovela","Short Episodes","Mexican Spanish"],
+    url:"https://www.youtube.com/results?search_query=la+rosa+de+guadalupe+completo",
+    emoji:"&#127801;", accent:"#fb7185", bg:"#1a1a2e", eps:"800+ episodes", destinos:false }
+];
+
+var levelColors = { "Beginner":"#4ade80", "Beginner-Intermediate":"#facc15" };
+var saved = [];
+try { saved = JSON.parse(localStorage.getItem('es_saved') || '[]'); } catch(e){}
+var activeFilter = 'All';
+var allFilters = ['All','Beginner','YouTube Channel','TV Series'];
+var openEpPanels = {};
+var activeEpFilter = {};
+
+function saveState() { try { localStorage.setItem('es_saved', JSON.stringify(saved)); } catch(e){} }
+
+function renderFilters() {
+  var el = document.getElementById('filters');
+  var html = '';
+  for (var i = 0; i < allFilters.length; i++) {
+    var f = allFilters[i];
+    html += '<button class="pill' + (activeFilter===f?' active':'') + '" onclick="setFilter(\'' + f + '\')">' + f + '</button>';
+  }
+  if (saved.length > 0) {
+    html += '<button class="pill saved-pill' + (activeFilter==='saved'?' active':'') + '" onclick="setFilter(\'saved\')">&#9733; My List (' + saved.length + ')</button>';
+  }
+  el.innerHTML = html;
+}
+
+function setFilter(f) { activeFilter = f; renderAll(); }
+
+function getFiltered() {
+  var list = [];
+  for (var i = 0; i < shows.length; i++) {
+    var s = shows[i];
+    if (activeFilter === 'saved' && saved.indexOf(s.id) === -1) continue;
+    if (activeFilter === 'Beginner' && s.level !== 'Beginner') continue;
+    if (activeFilter === 'YouTube Channel' && s.type !== 'YouTube Channel') continue;
+    if (activeFilter === 'TV Series' && s.type !== 'TV Series') continue;
+    list.push(s);
+  }
+  return list;
+}
+
+function destinosEpHTML(showId) {
+  var af = activeEpFilter[showId] || 'All';
+  var groupNames = Object.keys(unitGroups);
+  // filter pills
+  var pills = '<div class="ep-filters"><button class="ep-pill' + (af==='All'?' active':'') + '" onclick="setEpFilter(' + showId + ',\'All\')">All 52</button>';
+  for (var g = 0; g < groupNames.length; g++) {
+    var gn = groupNames[g];
+    pills += '<button class="ep-pill' + (af===gn?' active':'') + '" onclick="setEpFilter(' + showId + ',\'' + gn.replace(/'/g,"\\'") + '\')">' + gn + '</button>';
+  }
+  pills += '</div>';
+
+  // episode list
+  var rows = '<div class="ep-list">';
+  for (var i = 0; i < destinosEps.length; i++) {
+    var ep = destinosEps[i];
+    // filter check
+    if (af !== 'All') {
+      var inGroup = false;
+      var grpNums = unitGroups[af];
+      for (var k = 0; k < grpNums.length; k++) { if (grpNums[k] === ep.n) { inGroup = true; break; } }
+      if (!inGroup) continue;
+    }
+    var pad = ep.n < 10 ? '0' + ep.n : '' + ep.n;
+    // Link: learner.org first, archive.org as data attribute
+    var archiveUrl = 'https://archive.org/details/destinos_pbs/DESTINOS_' + pad + '.mp4';
+    var learnerUrl = 'https://www.learner.org/series/destinos-an-introduction-to-spanish/';
+    rows += '<a class="ep-item" href="' + archiveUrl + '" target="_blank" rel="noopener">' +
+      '<span class="ep-num">' + ep.n + '</span>' +
+      '<div class="ep-info"><div class="ep-title">' + ep.title + '</div><div class="ep-unit">' + ep.unit + '</div></div>' +
+      '<span class="ep-play">&#9654;</span>' +
+    '</a>';
+  }
+  rows += '</div>';
+  rows += '<div class="ep-note">Episodes open on Internet Archive (free, no login). Also on <a href="https://www.learner.org/series/destinos-an-introduction-to-spanish/" target="_blank" style="color:#f59e0b">learner.org</a> until July 2026.</div>';
+
+  return pills + rows;
+}
+
+function setEpFilter(showId, f) {
+  activeEpFilter[showId] = f;
+  var panel = document.getElementById('ep-panel-' + showId);
+  if (panel) panel.innerHTML = destinosEpHTML(showId);
+}
+
+function toggleEpPanel(showId) {
+  openEpPanels[showId] = !openEpPanels[showId];
+  var panel = document.getElementById('ep-panel-' + showId);
+  var btn   = document.getElementById('ep-toggle-' + showId);
+  if (openEpPanels[showId]) {
+    panel.classList.add('open');
+    panel.innerHTML = destinosEpHTML(showId);
+    btn.textContent = '▲ Hide Episodes';
+  } else {
+    panel.classList.remove('open');
+    btn.textContent = '▼ Browse All 52 Episodes';
+  }
+}
+
+function cardHTML(s) {
+  var isSaved = saved.indexOf(s.id) !== -1;
+  var lc = levelColors[s.level] || '#facc15';
+  var typeIcon = s.type === 'YouTube Channel' ? '&#9654;' : '&#128250;';
+  var savedCls = isSaved ? 'save-btn saved' : 'save-btn';
+
+  var epSection = '';
+  if (s.destinos) {
+    epSection = '<button class="ep-toggle" id="ep-toggle-' + s.id + '" onclick="toggleEpPanel(' + s.id + ')">&#9660; Browse All 52 Episodes</button>' +
+      '<div class="ep-panel" id="ep-panel-' + s.id + '"></div>';
+  }
+
+  return '<div class="card" style="background:linear-gradient(145deg,' + s.bg + ' 0%,#0d0d1a 100%)">' +
+    '<div class="card-bar" style="background:linear-gradient(90deg,' + s.accent + ',transparent)"></div>' +
+    '<div class="card-row1">' +
+      '<span class="card-emoji">' + s.emoji + '</span>' +
+      '<div class="card-right">' +
+        '<button class="' + savedCls + '" onclick="toggleSave(' + s.id + ')">&#9733;</button>' +
+        '<span class="type-badge" style="background:' + s.accent + '22;color:' + s.accent + ';border:1px solid ' + s.accent + '44">' + typeIcon + ' ' + s.type + '</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="card-title">' + s.title + '</div>' +
+    '<div class="card-meta-row">' +
+      '<span style="color:' + lc + '">&#9679; ' + s.level + '</span>' +
+      '<span style="color:#606080">&#127758; ' + s.region + '</span>' +
+      '<span style="color:#606080">' + s.eps + '</span>' +
+    '</div>' +
+    '<p class="card-desc">' + s.desc + '</p>' +
+    '<div class="tags">' + s.tags.map(function(t){ return '<span class="tag">' + t + '</span>'; }).join('') + '</div>' +
+    '<a class="watch-btn" href="' + s.url + '" target="_blank" rel="noopener" style="background:' + s.accent + '18;color:' + s.accent + ';border-color:' + s.accent + '44">&#9654; WATCH FREE</a>' +
+    epSection +
+  '</div>';
+}
+
+function renderAll() {
+  renderFilters();
+  var list = getFiltered();
+  document.getElementById('count').textContent = list.length + ' resource' + (list.length !== 1 ? 's' : '');
+  var html = '';
+  for (var i = 0; i < list.length; i++) html += cardHTML(list[i]);
+  document.getElementById('grid').innerHTML = html;
+}
+
+function toggleSave(id) {
+  var idx = saved.indexOf(id);
+  if (idx !== -1) saved.splice(idx, 1); else saved.push(id);
+  saveState();
+  renderAll();
+}
+
+var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+var isStandalone = window.navigator.standalone === true;
+if (isIOS && !isStandalone) document.getElementById('iosBanner').style.display = 'block';
+
+renderAll();
+</script>
+</body>
+</html>
